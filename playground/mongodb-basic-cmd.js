@@ -41,12 +41,23 @@ MongoClient.connect(url,(err, client) => {
     //         }
     //         console.log(JSON.stringify(res,undefined,2 ));
     //     });
+    //this is how we select by an id -we must use the ID constructor on the appropriate id.
+    //and how we can get the time that is secretly defined in the object id.
+    db.collection('Users').find({_id: ObjectID("5a70dc35ffab2d33d218666d")}).toArray()
+        .then((doc) => {
+           console.log(JSON.stringify(doc,undefined,2));
+           console.log(doc[0]._id.getTimestamp());
+        });
+
+
+
+
 
 
     //here we can see a use of a different cursor method - count.
     // db.collection('Todos').find().count()
     //     .then((count) => {
-    //         console.log(`number of todo\`s is ${count}`);
+    //         console.log(`number oftodo\`s is ${count}`);
     //     });
 
 
@@ -73,10 +84,10 @@ MongoClient.connect(url,(err, client) => {
     // });
 
     //we can also use regular expressions in the find function - /Regex_Pattern/
-    db.collection("Users").find({name:/mi.*/}).toArray()
-        .then((documents) => {
-           console.log(documents,undefined,2);
-        });
+    // db.collection("Users").find({name:/mi.*/}).toArray()
+    //     .then((documents) => {
+    //        console.log(documents,undefined,2);
+    //     });
 
     client.close()
 });
