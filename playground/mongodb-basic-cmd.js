@@ -24,6 +24,7 @@ MongoClient.connect(url,(err, client) => {
 
     //this is how we select all documents in a given collection.  - .find and then we get cursor instance
     // and on that instance we can use -> toArray (and many other methods).
+
     // db.collection('Todos').find().toArray().
     // then((err, result) => {
     //     if(err) {
@@ -34,6 +35,7 @@ MongoClient.connect(url,(err, client) => {
 
     //this is how we filter records by properties values (like when is sql.) ->
     //here i select only the records that contain the prop name with value saar
+
     // db.collection('Users').find({name:"Saar"}).toArray()
     //     .then((err,res) => {
     //         if(err) {
@@ -41,13 +43,15 @@ MongoClient.connect(url,(err, client) => {
     //         }
     //         console.log(JSON.stringify(res,undefined,2 ));
     //     });
+
     //this is how we select by an id -we must use the ID constructor on the appropriate id.
     //and how we can get the time that is secretly defined in the object id.
-    db.collection('Users').find({_id: ObjectID("5a70dc35ffab2d33d218666d")}).toArray()
-        .then((doc) => {
-           console.log(JSON.stringify(doc,undefined,2));
-           console.log(doc[0]._id.getTimestamp());
-        });
+
+    // db.collection('Users').find({_id: ObjectID("5a70dc35ffab2d33d218666d")}).toArray()
+    //     .then((doc) => {
+    //        console.log(JSON.stringify(doc,undefined,2));
+    //        console.log(doc[0]._id.getTimestamp());
+    //     });
 
 
 
@@ -62,6 +66,7 @@ MongoClient.connect(url,(err, client) => {
 
 
     //this is how we insert a document to a given collection.
+
     // db.collection('Todos').insertOne({
     //    text:"something to do..",
     //    completed:false
@@ -84,6 +89,7 @@ MongoClient.connect(url,(err, client) => {
     // });
 
     //we can also use regular expressions in the find function - /Regex_Pattern/
+
     // db.collection("Users").find({name:/mi.*/}).toArray()
     //     .then((documents) => {
     //        console.log(documents,undefined,2);
