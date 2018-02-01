@@ -27,9 +27,10 @@ app.post("/todo",(req,res) => {
 
 });
 
-app.listen(port,() => {
+let server = app.listen(port,() => {
     console.log(`listening on port ${port}...`);
 });
 
+module.exports = {server,app};
 
 
