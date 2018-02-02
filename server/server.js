@@ -39,14 +39,14 @@ app.get("/todos/:id",(req,res) => {
     const id = req.params.id;
 
     if(!ObjectID.isValid(id)){
-        return res.status(400).send("the id supplied is not valid.");
+        return res.status(404).send("the id supplied is not valid.");
     }
     todos.findById(id).then((todo) => {
         if(!todo){
             res.status(404).send(`the id :${id} does not exist`);
         }
         res.send({todo});
-    }).catch((e)=>console.log(e));
+    }).catch((e)=>res.status(400).send());
 });
 
 let server = app.listen(port,() => {

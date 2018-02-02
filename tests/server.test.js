@@ -11,8 +11,8 @@ chai.use(sinonChai);
 
 //before each test run it deletes all items in db.
 const todosTestArray = [
-    {text:"test todo 1", _id: "5a74c54cfb7d9c094148f445"},
-    {text:"test todo 2"}
+    {text:"test todo 1", _id: new ObjectID()},
+    {text:"test todo 2", _id: new ObjectID()}
 ];
 
 beforeEach((done) => {
@@ -109,8 +109,12 @@ describe("Server tests",() => {
                })
         });
 
+
+    })
+
+    describe("GET /todos/:id",() => {
         it("Should return todo by id",(done) => {
-            const id = "5a74c54cfb7d9c094148f445";
+            const id = todosTestArray[0]._id.toHexString();
             const text = "test todo 1";
             request(app)
                 .get(`/todos/${id}`)
@@ -122,8 +126,40 @@ describe("Server tests",() => {
                     chai.expect(res.body.todo._id).to.be.equal(id);
                     chai.expect(res.body.todo.text).to.be.equal(text);
                     done();
-            })
+                })
+        });
+
+        it("Should return 404 when todo not found",(done) => {
+            const falseId = new ObjectID().toHexString();
+            request(app)
+                .get(`/todos/${falseId}`)
+                .expect(404)
+                .end((err, res) => {
+                    if(err){
+                        return done(err);
+                    }
+                    chai.expect(res.text).to.be.equal(`the id :${falseId} does not exist`);
+                    done();
+                })
+        });
+
+        it("Should return 404 when id is not valid",() => {
+            const notValidId = "1";
+            request(app)
+                .get(`/todos/${notValidId}`)
+                .expect(404)
+                .end((err,res) => {
+                    if(err){
+                        return done(err);
+                    }
+                    // console.log(res.text);
+                    // chai.expect(res.text).to.be.equal(4);
+                    done();
+                })
+
         })
+
+
     })
 
 
