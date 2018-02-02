@@ -9,6 +9,7 @@ const {todos} = require('../server/db/models/todo');
 chai.use(sinonChai);
 
 //before each test run it deletes all items in db.
+
 beforeEach((done) => {
    todos.remove({}).then(()=> done());
 });
@@ -16,7 +17,7 @@ beforeEach((done) => {
 describe("Server tests",() => {
 
     describe("POST /todo", () => {
-        let text = "go to steve aoki";
+       let text = "go to steve aoki";
 
         it("Should create a todo",(done) =>{
             request(app)
@@ -24,9 +25,9 @@ describe("Server tests",() => {
                .send({text})
                .expect(200)
                .expect((res) => {
-                   chai.expect(res.body.text).to.deep.equal(text);
+                   chai.expect(res.body.text).to.equal(text);
                })
-               .end((err,res) => {
+               .end((err) => {
                     if(err){
                         return done(err);
                     }
@@ -40,6 +41,24 @@ describe("Server tests",() => {
                });
 
         });
+
+        it("Should not create todo with invalid data",(done) =>{
+
+            request(app)
+                .post("/todo")
+                .send({})
+                .expect(400)
+                .end((err) => {
+                    if(err){
+                        return done(err);
+                    }
+                    todos.find().then((todos) => {
+                        chai.expect(todos.length).to.be.equal(0);
+                    })
+                        .catch((e) => done(e));
+                    done();
+                })
+        })
         // in case we are not using before each to empty the db.
 
         // it("Should create a todo",(done) =>{

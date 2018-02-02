@@ -13,6 +13,7 @@ app.use(bodyParser.json());
 
 app.post("/todo",(req,res) => {
 
+    //bad separation of concerns - should create a db file that stores all the functions relating to the db.
     const todoDoc = new todos({
         text: req.body.text
     });
