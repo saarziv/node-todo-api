@@ -1,8 +1,11 @@
 const mongoose = require('mongoose');
 
 const dbName = "TodoApp";
-const remoteMongoDbUri = "mongodb://saarziv:Aa123456@ds123718.mlab.com:23718/node-todo-api-db";
-const url = process.env.MONGODB_URI || `mongodb://localhost:27017/${dbName}`;
+const dbUrl = {
+    mlab:"mongodb://saarziv:Aa123456@ds123718.mlab.com:23718/node-todo-api-db",
+    localhost:`mongodb://localhost:27017/${dbName}`
+};
+const url = dbUrl.localhost|| db.mlab;
 
 mongoose.connect(url);
 
