@@ -1,3 +1,6 @@
+require("./config/config");
+
+
 const _ = require('lodash');
 // const mongoose = require('mongoose');
 const express = require('express');
@@ -10,7 +13,7 @@ const { users } = require('./db/models/user');
 const { todos } = require('./db/models/todo');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 app.use(bodyParser.json());
 
 app.post("/todos",(req,res) => {

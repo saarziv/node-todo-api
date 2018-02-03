@@ -231,7 +231,7 @@ describe("Server tests",() => {
                        return done(err);
                    }
 
-                   todos.findById(id).thten((todo) => {
+                   todos.findById(id).then((todo) => {
                        let resFormatted = _.pick(res.body.todo,["completed","text"]);
                        chai.expect(resFormatted).to.deep.equal(todoUpdate);
                        chai.expect(res.body.todo.completedAt).to.be.null;
