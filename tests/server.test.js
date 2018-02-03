@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const request = require('supertest');
 const chai = require('chai');
 const sinon = require('sinon');
@@ -12,7 +13,7 @@ chai.use(sinonChai);
 //before each test run it deletes all items in db.
 const todosTestArray = [
     {text:"test todo 1", _id: new ObjectID()},
-    {text:"test todo 2", _id: new ObjectID()}
+    {text:"test todo 2", _id: new ObjectID(), completedAt:1223,completed:true}
 ];
 
 beforeEach((done) => {
@@ -193,6 +194,69 @@ describe("Server tests",() => {
         })
 
     })
+
+    describe("PATCH /todos/:id", (done) =>{
+       it("Should update a todo`s completed at,text property",(done) =>{
+           const id = todosTestArray[0]._id.toHexString();
+           const todoUpdate= {completed:true,text:"from tests."};
+           request(app)
+               .patch(`/todos/${id}`)
+               .send(todoUpdate)
+               .expect(200)
+               .end((err,res) => {
+                   if(err) {
+                       return done(err);
+                   }
+                   todos.findById(id).then((todo) => {
+                       let resFormatted = _.pick(res.body.todo,["completed","text"]);
+                       chai.expect(resFormatted).to.be.deep.equal(todoUpdate);
+                       chai.expect(todo.completed).to.be.equal(resFormatted.completed);
+                       chai.expect(todo.text).to.be.equal(resFormatted.text);
+                       chai.expect(res.body.todo.completedAt).to.not.be.null;
+                       done();
+                   });
+               });
+       });
+
+       it("Should update a todo`s to completed false and reset the completed at property",(done) => {
+
+           const id = todosTestArray[1]._id.toHexString();
+           const todoUpdate= {completed:false,text:"from tests2."};
+           request(app)
+               .patch(`/todos/${id}`)
+               .expect(200)
+               .send(todoUpdate)
+               .end((err,res) => {
+                   if(err) {
+                       return done(err);
+                   }
+
+                   todos.findById(id).thten((todo) => {
+                       let resFormatted = _.pick(res.body.todo,["completed","text"]);
+                       chai.expect(resFormatted).to.deep.equal(todoUpdate);
+                       chai.expect(res.body.todo.completedAt).to.be.null;
+                       done();
+
+                   });
+               });
+       });
+
+       it("Should return 404 if todo was`nt found",(done) => {
+           const id = new ObjectID().toHexString();
+           request(app)
+               .patch(`/todos/${id}`)
+               .expect(404)
+               .end(done)
+       });
+       it("Should return 404 if id isn`t valid",(done) => {
+           request(app)
+               .patch(`/todos/123abc`)
+               .expect(404)
+               .end(done)
+       });
+
+
+    });
 
 
 });

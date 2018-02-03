@@ -1,3 +1,4 @@
+const _ = require('lodash');
 // const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -68,6 +69,39 @@ app.delete("/todos/:id",(req,res) => {
    }).catch((e) => {
        res.status(400).send();
    })
+});
+
+app.patch("/todos/:id",(req,res) => {
+    const id = req.params.id;
+    if(!ObjectID.isValid(id)){
+        return res.status(404).send();
+    }
+    //creates an object from req.body that only contains completes,text properties.
+    //this way if the client passes completedAt property with a value in the request body, it wont be updated according to the value he inserted.
+    var body = _.pick(req.body,['completed','text']);
+
+    //checking if the completed is indeed a boolean , if it isn`t then simply make the prop false.
+    if(_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completedAt = null;
+        body.completed = false;
+    }
+
+    todos.findByIdAndUpdate(id,
+        {
+            $set : {completed: body.completed, completedAt: body.completedAt, text: body.text}
+        },
+        {
+            new:true
+        }).then((todo) => {
+            if(!todo){
+                res.status(404).send("the todo could`nt be found");
+            }
+            res.send({todo});
+    }).catch((e)=> res.status(400).send());
+
+
 });
 
 module.exports = {server,app};
