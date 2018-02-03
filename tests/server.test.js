@@ -110,7 +110,7 @@ describe("Server tests",() => {
         });
 
 
-    })
+    });
 
     describe("GET /todos/:id",() => {
         it("Should return todo by id",(done) => {
@@ -143,7 +143,7 @@ describe("Server tests",() => {
                 })
         });
 
-        it("Should return 404 when id is not valid",() => {
+        it("Should return 404 when id is not valid",(done) => {
             const notValidId = "1";
             request(app)
                 .get(`/todos/${notValidId}`)
@@ -156,9 +156,41 @@ describe("Server tests",() => {
                     // chai.expect(res.text).to.be.equal(4);
                     done();
                 })
-
         })
+    })
 
+    describe("DELETE /todos/:id",() => {
+
+        it("Should delete a document and return it",(done) => {
+            const id = todosTestArray[0]._id.toHexString();
+            request(app)
+                .delete(`/todos/${id}`)
+                .expect(200)
+                .end((err,res) => {
+                    if(err) {
+                        return done(err);
+                    }
+                    todos.findById(id).then((doc) => {
+                        chai.expect(doc).to.be.null;
+                        chai.expect(id).to.be.equal(res.body.todo._id);
+                        done();
+                    }).catch((e) => done(e));
+                });
+
+        });
+        it("Should return 404 when supplied an non existent id",(done) =>{
+            const id = new ObjectID().toHexString();
+            request(app)
+                .delete(`/todos/${id}`)
+                .expect(404)
+                .end(done)
+        });
+        it("Should return 404 when supplied an invalid id",(done) =>{
+            request(app)
+                .delete(`/todos/123abc`)
+                .expect(404)
+                .end(done)
+        })
 
     })
 

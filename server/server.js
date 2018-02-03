@@ -53,6 +53,23 @@ let server = app.listen(port,() => {
     console.log(`listening on port ${port}...`);
 });
 
+app.delete("/todos/:id",(req,res) => {
+   const id = req.params.id;
+   if(!ObjectID.isValid(id)){
+       return res.status(404).send();
+   }
+
+   todos.findByIdAndRemove(id).then((todo) => {
+       if(!todo){
+           res.status(404).send(`the id :${id} does not exist`);
+       }
+
+       res.send({todo});
+   }).catch((e) => {
+       res.status(400).send();
+   })
+});
+
 module.exports = {server,app};
 
 
