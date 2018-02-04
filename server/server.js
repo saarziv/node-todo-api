@@ -75,6 +75,7 @@ app.patch("/todos/:id",(req,res) => {
     if(!ObjectID.isValid(id)){
         return res.status(404).send();
     }
+
     //creates an object from req.body that only contains completes,text properties.
     //this way if the client passes completedAt property with a value in the request body, it wont be updated according to the value he inserted.
     var body = _.pick(req.body,['completed','text']);
@@ -100,27 +101,43 @@ app.patch("/todos/:id",(req,res) => {
             res.send({todo});
     }).catch((e)=> res.status(400).send());
 
-
 });
 
 app.post("/users",(req,res)=>{
     let properties =  _.pick(req.body,["email","password"]);
     let user = new User(properties);
 
-    console.log("b4");
+    //generateAuthToken - an instance method we created on the user model that generates a token updates ->
+    // the user instance with the token and returns that token
     user.save().then(()=>{
-        let token = user.generateAuthToken()
-            .then((token) => {
-                console.log("hi");
-                res.header('x-auth',token).send(user);
-            });
-        console.log("??");
+        return user.generateAuthToken();
 
-        //sends respond with custom header where the string is the name of the header and the 2nd arg is its value
-
-
+    }).then((token) => {
+        res.header("x-auth",token).send(user.toJSON());
 
     }).catch((e)=>res.status(400).send(e))
+
+    //different way to save users :(nice explanation)
+    /*
+    notice that we could also simply use this call because in generateAuthToken we are saving the user instance in the db anyways.
+    the problem with this way however is that you don`t want to
+    tightly couple generating an authentication token with creating a user, because now whenever you just need to create an authentication token,->
+    you must also create a user.
+
+    tightly coupling is an expression identical to bad separation of concerns.
+    and that kind of code is way better - more flexible more testable etc..
+
+    when we use the first way defined above -we are first saving the user in db without his token , and after that in the generateAuthToken method ->
+    we are UPDATING that user in the db with the new token therefore the generateAuthToken simply generates a token to a user and updates that user
+    and returns the token.
+
+    anyway its not that critical and both methods have their advantages and disadvantages.
+
+    user.generateAuthToken().then((token)=>{
+        res.header("x-auth",token).send(user);
+
+    }).catch((e)=>res.status(400).send(e));
+    */
 
 });
 
