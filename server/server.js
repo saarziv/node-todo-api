@@ -1,6 +1,4 @@
 require("./config/config");
-
-
 const _ = require('lodash');
 // const mongoose = require('mongoose');
 const express = require('express');
@@ -9,7 +7,7 @@ const {ObjectID} = require('mongodb');
 
 //notice that when using object destructoring we must putt a variable that is identical to the property of the export!
 const { mongoose } = require('./db/mongo-connect');
-const { users } = require('./db/models/user');
+const { User } = require('./db/models/user');
 const { todos } = require('./db/models/todo');
 
 const app = express();
@@ -53,9 +51,7 @@ app.get("/todos/:id",(req,res) => {
     }).catch((e)=>res.status(400).send());
 });
 
-let server = app.listen(port,() => {
-    console.log(`listening on port ${port}...`);
-});
+
 
 app.delete("/todos/:id",(req,res) => {
    const id = req.params.id;
@@ -107,6 +103,30 @@ app.patch("/todos/:id",(req,res) => {
 
 });
 
+app.post("/users",(req,res)=>{
+    let properties =  _.pick(req.body,["email","password"]);
+    let user = new User(properties);
+
+    console.log("b4");
+    user.save().then(()=>{
+        let token = user.generateAuthToken()
+            .then((token) => {
+                console.log("hi");
+                res.header('x-auth',token).send(user);
+            });
+        console.log("??");
+
+        //sends respond with custom header where the string is the name of the header and the 2nd arg is its value
+
+
+
+    }).catch((e)=>res.status(400).send(e))
+
+});
+
+let server = app.listen(port,() => {
+    console.log(`listening on port ${port}...`);
+});
 module.exports = {server,app};
 
 

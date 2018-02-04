@@ -38,6 +38,11 @@ b. than in the mongoose-connect file i used these lines of code :
 that way , when we run locally -> process.env.MONGODB_URI_HEROKU wont be defined , so we will use the process.env.MONGODB_URI
 and when we run from heroku it will be defined and we will use the mlab db.
 
+
+btw when running on heroku the env variable value (process.env.NODE_ENV ) is "production" therefore i could also simply add another if statement like this:
+ if(env = "production")
+    process.env.MONGODB_URI = "<mlab_uri_path>";
+and it supposed to work as well (without creating a custom environment variable like i did.)
 * */
 
 const env = process.env.NODE_ENV || "development";

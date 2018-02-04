@@ -1,7 +1,7 @@
 const { ObjectID } = require("mongodb");
-const {mongoose} = require("../server/db/mongo-connect");
-const {users} = require("../server/db/models/user");
-const {todos} = require("../server/db/models/todo");
+const {mongoose} = require("../../server/db/mongo-connect");
+const {users} = require("../../server/db/models/user");
+const {todos} = require("../../server/db/models/todo");
 
 
 const id = "5a7236507ff3eb1046050ae7";
