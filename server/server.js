@@ -1,18 +1,24 @@
 require("./config/config");
 const _ = require('lodash');
-// const mongoose = require('mongoose');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 
-//notice that when using object destructoring we must putt a variable that is identical to the property of the export!
+//es6 object destructuring takes the value of the key(named in curly braces) from the object exported from the file.
+//notice that when using object destructuring we must putt a variable that is identical to the property of the export!
 const { mongoose } = require('./db/mongo-connect');
 const { User } = require('./db/models/user');
 const { todos } = require('./db/models/todo');
+const {authenticate} = require('./middleware/authenticate');
 
 const app = express();
 const port = process.env.PORT;
+
+
+
 app.use(bodyParser.json());
+
+// app.use(authenticate); this line will make every api endpoint check for authentication b4 continuing
 
 app.post("/todos",(req,res) => {
     //bad separation of concerns - should create a db file that stores all the functions relating to the db.
@@ -141,9 +147,25 @@ app.post("/users",(req,res)=>{
 
 });
 
+//creating a middleware function - a function that will execute before another function that responds to a url.
+//we are setting the req parameter with the user object and the token so the next function will have these properties as well. which is awesome.
+//we must call next() in order to make the next function execute.
+
+
+
+//we insert the middleware function (without giving it parameters.)
+
+
+app.get("/users/me",authenticate,(req,res)=>{
+    res.send(req.user);
+});
+
+
+
 let server = app.listen(port,() => {
     console.log(`listening on port ${port}...`);
 });
+
 module.exports = {server,app};
 
 

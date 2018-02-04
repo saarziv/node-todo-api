@@ -64,6 +64,30 @@ UserSchema.methods.generateAuthToken = function () {
     //we must put return b4 user.save if we want to access the token value after it is saved to the db.
 
 };
+UserSchema.statics.getByToken = function (token){
+    let decoded;
+    //if the verify results in an error we will need to handle it.
+    try {
+        decoded = jwt.verify(token,"123abc");
+    } catch (e){
+
+        //because we want the getByToken to handle the error of invalid token with a respond with status 401(which means authentication is required)
+        //we need to handle the error in the server.js file , therefore we need to return a promise that will reject
+        //and when if it will reject it will be caught  in the .catch of the GetByToken in server.js file.
+        //when a reject is returned it will automatically go to the .catch
+        return Promise.reject();
+    }
+
+    //we need to check all props are equal the decoded objects props (and not only id)for security reasons probably..
+    return User.findOne({
+        '_id':decoded._id,
+        'tokens.access':decoded.access,
+        'tokens.token':token
+    }).then((user)=>{
+        return user;
+    }).catch((e)=>e)
+};
+
 const User = mongoose.model('users',UserSchema);
 
 module.exports ={User};
