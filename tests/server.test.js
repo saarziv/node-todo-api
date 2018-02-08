@@ -7,20 +7,27 @@ const {ObjectID} = require('mongodb');
 
 const {app,server} = require('../server/server');
 const {todos} = require('../server/db/models/todo');
+const {seedTodos,todosTestArray,seedUsers,UsersTestArray} = require('./seed/seed');
 
 chai.use(sinonChai);
 
 //before each test run it deletes all items in db.
-const todosTestArray = [
-    {text:"test todo 1", _id: new ObjectID()},
-    {text:"test todo 2", _id: new ObjectID(), completedAt:1223,completed:true}
-];
 
-beforeEach((done) => {
-   todos.remove({}).then(()=>{
-       return todos.insertMany(todosTestArray)
-   }).then(() => done());
-});
+
+// const todosTestArray = [
+//     {text:"test todo 1", _id: new ObjectID()},
+//     {text:"test todo 2", _id: new ObjectID(), completedAt:1223,completed:true}
+// ];
+
+// beforeEach((done) => {
+//     the Promise.all function gets an array of promises and executes them.
+//     after alll the promises executed , the .then will execute
+//     this way i am seeding both the Users, and todos before each it block in the test.
+//     Promise.all([seedTodos(),seedUsers()]).then(()=> {done()})
+// });
+
+beforeEach((done)=>seedUsers(done));
+beforeEach((done) => seedTodos(done));
 
 describe("Server tests",() => {
 
@@ -195,7 +202,7 @@ describe("Server tests",() => {
 
     })
 
-    describe("PATCH /todos/:id", (done) =>{
+    describe("PATCH /todos/:id", () =>{
        it("Should update a todo`s completed at,text property",(done) =>{
            const id = todosTestArray[0]._id.toHexString();
            const todoUpdate= {completed:true,text:"from tests."};
@@ -256,6 +263,42 @@ describe("Server tests",() => {
        });
 
 
+    });
+    describe('POST /users',() =>{
+        //test the creation of user
+        //test that the password is stored hashed.
+        //test that it res with x-auth header with the token , and that the token is saved in the db.
+
+        it('Should create a user in db')
+    });
+
+    describe('GET /users/me',() =>{
+       //test that when a token is supplied in the x-auth header the corresponding is responded.
+        //test that when there is no token a 401 is returned.
+        it("Should respond with a user by the token",(done) =>{
+            request(app)
+                .get("/users/me")
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
+                .expect(200)
+                .end((err, res) =>{
+                    if(err){
+                        return done(err);
+                    }
+                    chai.expect(res.body._id).to.equal(UsersTestArray[0]._id.toString());
+                    chai.expect(res.body.email).to.equal(UsersTestArray[0].email);
+                    done();
+                })
+        })
+
+        it("Should respond with a 401",(done) =>{
+            request(app)
+                .get("/users/me")
+                .expect(401)
+                .expect((res) =>{
+                    chai.expect(res.body).to.be.empty; // empty defines an empty object - {}
+                })
+                .end(done)
+        })
     });
 
 

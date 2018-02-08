@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 //now checking if the environment variable exists - if not use localhost.
 const url = process.env.MONGODB_URI_HEROKU || process.env.MONGODB_URI;
 
+
 //another option is to use this :
 //checks if the app is on heroku , use the mlab db if not use local db.
 // const url = (process.env.PORT) ?  dbUrl.mlab : dbUrl.localhost;

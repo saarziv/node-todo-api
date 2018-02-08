@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const validator = require('validator');
 const mongoose = require('mongoose');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 const UserSchema = mongoose.Schema({
     email :{
@@ -30,6 +31,31 @@ const UserSchema = mongoose.Schema({
             required:true
         }
     }]
+});
+
+//this function is a middleware function of mongoose , which will execute every time before the user.save function executes.
+//it takes a event 'save' , and executes a function.
+//when next is called the execution of pre will finish and the save will start executing.
+//this way we will hash the password b4 adding users to the db.
+UserSchema.pre('save',function (next) {
+    var user = this;
+
+    //checking if the password was modified because in case of an update of some property (like email) of an existing user,
+    //his password will already be hashed , if i wont check if it was modified , it will hash a hashed password which will
+    //break the program.
+    //if i change the password ,it will not contain a hash value therefore i wont be hashing a hash and i wont break the program.
+     if(user.isModified('password')){
+         bcrypt.genSalt(10)
+             .then((s)=>bcrypt.hash(user.password,s))
+             .then((hash) => {
+                 user.password = hash;
+                 next();
+             }).catch((e)=>e);
+     }
+     else {
+         console.log("not modified password.");
+         next();
+     }
 });
 
 //overriding an existing  instance method to supply out specific needs.
