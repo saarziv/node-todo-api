@@ -3,6 +3,7 @@ const _ = require('lodash');
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const bcrypt = require('bcryptjs');
 
 //es6 object destructuring takes the value of the key(named in curly braces) from the object exported from the file.
 //notice that when using object destructuring we must putt a variable that is identical to the property of the export!
@@ -151,10 +152,31 @@ app.post("/users",(req,res)=>{
 //we are setting the req parameter with the user object and the token so the next function will have these properties as well. which is awesome.
 //we must call next() in order to make the next function execute.
 
+app.post("/users/login",(req,res)=>{
+    let body = _.pick(req.body,["email","password"]);
+    let user;
+    User.getByCredentials(body.email,body.password)
+        .then((userFound) =>{
+            user = userFound;
+
+            //notice that when logging in we need to generate a new auth token
+            //because an authentication token represents a login to the server ,
+            // we wouldn`t want to validate an old token that was generated in an older login in
+            //the goal is to pass the token to ever endpoint we expose in order to see if the user is authorized.
+            //we created a middleware function that is called authenticate in order to achieve that.
+            return userFound.generateAuthToken()
+        }).then((token) =>{
+
+            // it will send only id and email thanks to the User.toJson function that we overrided.
+            res.header('x-auth',token).send(user);
+        })
+        .catch((e) => res.status(401).send(e));
+
+});
+
 
 
 //we insert the middleware function (without giving it parameters.)
-
 
 app.get("/users/me",authenticate,(req,res)=>{
     res.send(req.user);

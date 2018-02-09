@@ -53,7 +53,6 @@ UserSchema.pre('save',function (next) {
              }).catch((e)=>e);
      }
      else {
-         console.log("not modified password.");
          next();
      }
 });
@@ -112,6 +111,20 @@ UserSchema.statics.getByToken = function (token){
     }).then((user)=>{
         return user;
     }).catch((e)=>e)
+};
+
+UserSchema.statics.getByCredentials = function (email,password) {
+    let foundUser;
+    return User.findOne({email}).then((user) =>{
+        if(!user){
+            // better to return a promise.reject and catch it in the end than call res.send multiple times.
+            return Promise.reject("the user email does not exists")
+        }
+        foundUser = user;
+        return bcrypt.compare(password,user.password);
+    }).then((bool) => {
+        return (bool) ? foundUser : Promise.reject("Invalid password");
+    })
 };
 
 const User = mongoose.model('users',UserSchema);
