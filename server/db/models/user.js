@@ -63,6 +63,17 @@ UserSchema.methods.toJSON = function () {
     // let userObj = user.toObject(); for some reason Andrew uses this statement although the user instance type is an object any way..
     return _.pick(user,["email","_id"]);
 };
+
+UserSchema.methods.removeToken = function (token) {
+    let user = this;
+
+    //deletes a token from the tokens array where the token prop is eq the token param.
+    return user.update({
+        $pull: {
+            tokens:{token}
+        }
+    });
+};
 UserSchema.methods.generateAuthToken = function () {
 
     //the this of this function is the instance that is calling it (this is an instance method.)
@@ -89,6 +100,7 @@ UserSchema.methods.generateAuthToken = function () {
     //we must put return b4 user.save if we want to access the token value after it is saved to the db.
 
 };
+
 UserSchema.statics.getByToken = function (token){
     let decoded;
     //if the verify results in an error we will need to handle it.

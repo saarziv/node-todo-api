@@ -15,19 +15,6 @@ chai.use(sinonChai);
 
 //before each test run it deletes all items in db.
 
-
-// const todosTestArray = [
-//     {text:"test todo 1", _id: new ObjectID()},
-//     {text:"test todo 2", _id: new ObjectID(), completedAt:1223,completed:true}
-// ];
-
-// beforeEach((done) => {
-//     the Promise.all function gets an array of promises and executes them.
-//     after alll the promises executed , the .then will execute
-//     this way i am seeding both the Users, and todos before each it block in the test.
-//     Promise.all([seedTodos(),seedUsers()]).then(()=> {done()})
-// });
-
 beforeEach((done)=>seedUsers(done));
 beforeEach((done) => seedTodos(done));
 
@@ -39,6 +26,7 @@ describe("Server tests",() => {
         it("Should create a todo",(done) =>{
             request(app)
                .post('/todos')
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                .send({text})
                .expect(200)
                .expect((res) => {
@@ -63,6 +51,7 @@ describe("Server tests",() => {
 
             request(app)
                 .post("/todos")
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .send({})
                 .expect(400)
                 .end((err) => {
@@ -109,9 +98,10 @@ describe("Server tests",() => {
         it("Should return all todos",(done) => {
            request(app)
                .get("/todos")
+               .set('x-auth',UsersTestArray[0].tokens[0].token)
                .expect(200)
                .expect((res) => {
-                   chai.expect(res.body.todos.length).to.be.equal(2);
+                   chai.expect(res.body.todos.length).to.be.equal(1);
                })
                .end(done)
         });
@@ -125,6 +115,7 @@ describe("Server tests",() => {
             const text = "test todo 1";
             request(app)
                 .get(`/todos/${id}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .expect(200)
                 .end((err,res) => {
                     chai.expect(res.body.todo._id).to.be.equal(id);
@@ -137,6 +128,7 @@ describe("Server tests",() => {
             const falseId = new ObjectID().toHexString();
             request(app)
                 .get(`/todos/${falseId}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .expect(404)
                 .end((err, res) => {
                     chai.expect(res.text).to.be.equal(`the id :${falseId} does not exist`);
@@ -148,6 +140,7 @@ describe("Server tests",() => {
             const notValidId = "1";
             request(app)
                 .get(`/todos/${notValidId}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .expect(404)
                 .end(done)
         })
@@ -159,6 +152,7 @@ describe("Server tests",() => {
             const id = todosTestArray[0]._id.toHexString();
             request(app)
                 .delete(`/todos/${id}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .expect(200)
                 .end((err,res) => {
                     todos.findById(id).then((doc) => {
@@ -173,12 +167,14 @@ describe("Server tests",() => {
             const id = new ObjectID().toHexString();
             request(app)
                 .delete(`/todos/${id}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .expect(404)
                 .end(done)
         });
         it("Should return 404 when supplied an invalid id",(done) =>{
             request(app)
                 .delete(`/todos/123abc`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
                 .expect(404)
                 .end(done)
         })
@@ -191,6 +187,7 @@ describe("Server tests",() => {
            const todoUpdate= {completed:true,text:"from tests."};
            request(app)
                .patch(`/todos/${id}`)
+               .set('x-auth',UsersTestArray[0].tokens[0].token)
                .send(todoUpdate)
                .expect(200)
                .expect((res) => {
@@ -206,12 +203,13 @@ describe("Server tests",() => {
 
        it("Should update a todo`s to completed false and reset the completed at property",(done) => {
 
-           const id = todosTestArray[1]._id.toHexString();
+           const id = todosTestArray[0]._id.toHexString();
            const todoUpdate= {completed:false,text:"from tests2."};
            request(app)
                .patch(`/todos/${id}`)
-               .expect(200)
+               .set('x-auth',UsersTestArray[0].tokens[0].token)
                .send(todoUpdate)
+               .expect(200)
                .expect((res) => {
                    todos.findById(id).then((todo) => {
                        let resFormatted = _.pick(res.body.todo,["completed","text"]);
@@ -225,12 +223,14 @@ describe("Server tests",() => {
            const id = new ObjectID().toHexString();
            request(app)
                .patch(`/todos/${id}`)
+               .set('x-auth',UsersTestArray[0].tokens[0].token)
                .expect(404)
                .end(done)
        });
        it("Should return 404 if id isn`t valid",(done) => {
            request(app)
                .patch(`/todos/123abc`)
+               .set('x-auth',UsersTestArray[0].tokens[0].token)
                .expect(404)
                .end(done)
        });
@@ -269,6 +269,73 @@ describe("Server tests",() => {
                 .expect(400)
                 .end(done)
         })
+    });
+
+    describe("POST /users/login",()=>{
+       it("Should respond with a user id, email, newly generated token",(done) =>{
+           let email = UsersTestArray[0].email;
+           let password = UsersTestArray[0].password;
+           request(app)
+               .post("/users/login")
+               .send({email,password})
+               .expect(200)
+               .expect((res) =>{
+                   chai.expect(res.body.email).to.be.equal(email);
+
+                   //expects that the res.body will only have email,_id and nothing else ! (awesome assertion)
+                   chai.expect(res.body).to.have.all.keys('email','_id');
+               })
+               .end((err,res) =>{
+
+                   //if there was an error in the assertion above , show it and finish the test.
+                   if(err){
+                       done(err)
+                   }
+
+                   User.findById(res.body._id).then((user) =>{
+
+                       //expects that the token responded is indeed the last token generated for that user.
+                       chai.expect(user.tokens[user.tokens.length-1].token).to.be.equal(res.header['x-auth']);
+                       done();
+                   }).catch((e)=>done(e))
+               })
+       });
+       it("Should respond with 401 (unauthorized credentials)",(done) =>{
+           let email = "lala@notFound.com";
+           let password = "1234";
+           request(app)
+               .post("/users/login")
+               .send({email,password})
+               .expect(401)
+               .end(done)
+       })
+    });
+
+    describe("DELETE /users/me/token",() =>{
+       it("Should logout a user (delete his token from the DB)",(done) =>{
+           let token = UsersTestArray[0].tokens[0].token;
+           request(app)
+               .delete("/users/me/token")
+               .set('x-auth',token)
+               .expect(200)
+               .end((err) => {
+                   if(err) {
+                       done(err);
+                   }
+
+                   User.findById(UsersTestArray[0]._id).then((user) =>{
+                       chai.expect(user.tokens.length).to.equal(0);
+                       done();
+                   }).catch((e) => done(e))
+               })
+       });
+
+       it("Should return Unauthorized when trying to logout with a non existent user.",(done) =>{
+            request(app)
+                .delete("/users/me/token")
+                .expect(401)
+                .end(done)
+       })
     });
 
     describe('GET /users/me',() =>{

@@ -3,16 +3,11 @@ const jwt = require('jsonwebtoken');
 
 const { todos } = require("../../server/db/models/todo");
 const { User } = require("../../server/db/models/user");
- 
-
-const todosTestArray = [
-    {text:"test todo 1", _id: new ObjectID()},
-    {text:"test todo 2", _id: new ObjectID(), completedAt:1223,completed:true}
-];
 
 //better to generate the token with jwt sign and not the instance method generateAuthToken()
 //because this way we are not making the seed user db reliable on the functionality of generateAuthToken() method.
 const userOneId = new ObjectID();
+const userTwoId = new ObjectID();
 const UsersTestArray = [
      new User({
         _id:userOneId, 
@@ -24,10 +19,14 @@ const UsersTestArray = [
         }]
     }),
     new User({
-        _id:new ObjectID(),
+        _id:userTwoId,
         email:"saar2@example.com",
         password:"1234"
     })
+];
+const todosTestArray = [
+    {text:"test todo 1", _id: new ObjectID(),_creator: userOneId },
+    {text:"test todo 2", _id: new ObjectID(), _creator: userTwoId ,completedAt:1223,completed:true}
 ];
 
 //receiving  a -done callback parameter, passing it from the beforeEach

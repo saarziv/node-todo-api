@@ -19,12 +19,13 @@ const port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-// app.use(authenticate); this line will make every api endpoint check for authentication b4 continuing
+// app.use(authenticate); //this line will make every api endpoint check for authentication b4 continuing we dont want to use that because login and sign up
 
-app.post("/todos",(req,res) => {
-    //bad separation of concerns - should create a db file that stores all the functions relating to the db.
+//req.user is set on the authenticate
+app.post("/todos",authenticate,(req,res) => {
     const todoDoc = new todos({
-        text: req.body.text
+        text: req.body.text,
+        _creator: req.user._id
     });
 
     todoDoc.save()
@@ -35,22 +36,23 @@ app.post("/todos",(req,res) => {
         });
 });
 
-app.get("/todos",(req,res) => {
+app.get("/todos",authenticate,(req,res) => {
 
-    todos.find().then((todos)=>{
+    todos.find({_creator:req.user._id}).then((todos)=>{
         // todos.push({name:"testtt"}); to check if the test is good..
         //its better to always send an object instead on an array because then i can add more properties to the response like status code
         res.send({todos});
     },(err) => res.status(404).send(err))
 });
 
-app.get("/todos/:id",(req,res) => {
+app.get("/todos/:id",authenticate,(req,res) => {
     const id = req.params.id;
 
     if(!ObjectID.isValid(id)){
         return res.status(404).send("the id supplied is not valid.");
     }
-    todos.findById(id).then((todo) => {
+
+    todos.findOne({_id:id,_creator:req.user._id}).then((todo) => {
         if(!todo){
             res.status(404).send(`the id :${id} does not exist`);
         }
@@ -60,13 +62,13 @@ app.get("/todos/:id",(req,res) => {
 
 
 
-app.delete("/todos/:id",(req,res) => {
+app.delete("/todos/:id",authenticate,(req,res) => {
    const id = req.params.id;
    if(!ObjectID.isValid(id)){
        return res.status(404).send();
    }
 
-   todos.findByIdAndRemove(id).then((todo) => {
+   todos.findOneAndRemove({_id: id,_creator: req.user._id}).then((todo) => {
        if(!todo){
            res.status(404).send(`the id :${id} does not exist`);
        }
@@ -77,7 +79,7 @@ app.delete("/todos/:id",(req,res) => {
    })
 });
 
-app.patch("/todos/:id",(req,res) => {
+app.patch("/todos/:id",authenticate,(req,res) => {
     const id = req.params.id;
     if(!ObjectID.isValid(id)){
         return res.status(404).send();
@@ -95,7 +97,7 @@ app.patch("/todos/:id",(req,res) => {
         body.completed = false;
     }
 
-    todos.findByIdAndUpdate(id,
+    todos.findOneAndUpdate({_id:id,_creator:req.user._id},
         {
             $set : {completed: body.completed, completedAt: body.completedAt, text: body.text}
         },
@@ -174,6 +176,11 @@ app.post("/users/login",(req,res)=>{
 
 });
 
+app.delete("/users/me/token",authenticate,(req,res)=>{
+    req.user.removeToken(req.token).then(() =>{
+        res.status(200).send("successfully logged out.");
+    }).catch((e)=> res.status(400).send(e))
+});
 
 
 //we insert the middleware function (without giving it parameters.)
