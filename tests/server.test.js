@@ -124,6 +124,16 @@ describe("Server tests",() => {
                 })
         });
 
+        it("Should not return todo because it does not belong to that user.",(done) => {
+            const id = todosTestArray[1]._id.toHexString();
+            const text = "test todo 1";
+            request(app)
+                .get(`/todos/${id}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
+                .expect(404)
+                .end(done)
+        });
+
         it("Should return 404 when todo not found",(done) => {
             const falseId = new ObjectID().toHexString();
             request(app)
@@ -163,6 +173,25 @@ describe("Server tests",() => {
                 });
 
         });
+
+        it("Should not delete a todo that the user does not own",(done) => {
+            const id = todosTestArray[1]._id.toHexString();
+            request(app)
+                .delete(`/todos/${id}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
+                .expect(404)
+                .end((err) => {
+                    if(err){
+                        done(err)
+                    }
+                    todos.findById(id).then((doc) => {
+                        chai.expect(doc).to.not.be.null;
+                        done();
+                    }).catch((e) => done(e));
+                });
+
+        });
+
         it("Should return 404 when supplied an non existent id",(done) =>{
             const id = new ObjectID().toHexString();
             request(app)
@@ -179,7 +208,7 @@ describe("Server tests",() => {
                 .end(done)
         })
 
-    })
+    });
 
     describe("PATCH /todos/:id", () =>{
        it("Should update a todo`s completed at,text property",(done) =>{
@@ -201,7 +230,19 @@ describe("Server tests",() => {
                }).end(done)
        });
 
-       it("Should update a todo`s to completed false and reset the completed at property",(done) => {
+        it("Should not update a todo`s with wrong user",(done) =>{
+            const id = todosTestArray[1]._id.toHexString();
+            const todoUpdate= {completed:true,text:"from tests."};
+            request(app)
+                .patch(`/todos/${id}`)
+                .set('x-auth',UsersTestArray[0].tokens[0].token)
+                .send(todoUpdate)
+                .expect(404)
+                .end(done)
+        });
+
+
+        it("Should update a todo`s to completed false and reset the completed at property",(done) => {
 
            const id = todosTestArray[0]._id.toHexString();
            const todoUpdate= {completed:false,text:"from tests2."};
