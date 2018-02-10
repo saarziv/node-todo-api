@@ -97,6 +97,7 @@ if(env === "test" || env === "development"){
         // console.log(config[env][key]);
         process.env[key] = config[env][key];
     });
+    console.log(`***${env}***`);
 }
-console.log(`***${env}***`);
+
 

@@ -84,7 +84,6 @@ UserSchema.methods.generateAuthToken = function () {
     //we create a token that his purpose is authentication.
     let access = "auth";
     //creating a jwt hash that will be build from the id of the user, the access prop and 123abc salt.
-    console.log("hi");
     let token = jwt.sign({_id:user._id.toHexString(),access},process.env.JWT_SECRET).toString();
 
     //add that token to the token array prop of the user.
