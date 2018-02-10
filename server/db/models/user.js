@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const _ = require('lodash');
 const bcrypt = require('bcryptjs');
 
+
+
 const UserSchema = mongoose.Schema({
     email :{
         required:true,
@@ -81,9 +83,9 @@ UserSchema.methods.generateAuthToken = function () {
 
     //we create a token that his purpose is authentication.
     let access = "auth";
-
     //creating a jwt hash that will be build from the id of the user, the access prop and 123abc salt.
-    let token = jwt.sign({_id:user._id.toHexString(),access},"123abc").toString();
+    console.log("hi");
+    let token = jwt.sign({_id:user._id.toHexString(),access},process.env.JWT_SECRET).toString();
 
     //add that token to the token array prop of the user.
     user.tokens.push({access, token});
@@ -105,7 +107,7 @@ UserSchema.statics.getByToken = function (token){
     let decoded;
     //if the verify results in an error we will need to handle it.
     try {
-        decoded = jwt.verify(token,"123abc");
+        decoded = jwt.verify(token,process.env.JWT_SECRET);
     } catch (e){
 
         //because we want the getByToken to handle the error of invalid token with a respond with status 401(which means authentication is required)

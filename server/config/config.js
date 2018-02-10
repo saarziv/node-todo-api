@@ -45,15 +45,58 @@ btw when running on heroku the env variable value (process.env.NODE_ENV ) is "pr
 and it supposed to work as well (without creating a custom environment variable like i did.)
 * */
 
+/*
+ notice that it is better to store the configuration information in a seprate JSON file, that won`t be pushed to git hub since it will contain the secret hash.
+
+ when not using a JSON file this is the code that need to run :
+// const env = process.env.NODE_ENV || "development";
+//
+// console.log("env ******",env);
+//
+// if(env === "test"){
+//     process.env.PORT = 3000;
+//     process.env.MONGODB_URI = "mongodb://localhost:27017/TodoAppTest";
+//
+// } else if(env === "development") {
+//     process.env.PORT = 3000;
+//     process.env.MONGODB_URI = "mongodb://localhost:27017/TodoApp";
+// }
+
+*/
+/*
+    we declare process.env.NODE_ENV as test in package.json file when running tests,
+    therefore it will be development if its not a test.
+
+    if its from heroku process.env.NODE_ENV will be "production"
+
+    then if its not ran from heroku , i require the json file (it automatically parses the json to objects.)
+    then i declare the process variables according to the env.
+    for example its doing the following functionality
+    process.env.PORT = 3000,
+    process.env.MONGO_DB_URI = (tes/dev url db path)
+    process.env.JWT_SECRET = (tes/dev secret)
+    then i can access these environment variables every where i want in the project (without showing the JWR_SECRET)
+    (AND WITHOUT REQUIRING THE CONFIG.JSON FILE FROM THEM.)
+
+    in heroku i dont need to set these values because we created a mongo_db_uri_heroku already via heroku cmd , and its port is predefined as well.
+    (in the mongoose connect file we have this line :const url = process.env.MONGODB_URI_HEROKU || process.env.MONGODB_URI)
+    that mean that it will try to connect to process.env.MONGODB_URI only when not running from heroku (the env is test/development).
+
+    notice that i should not push the config.json file to github because it contains the secret for the jwt we use in generating a token.
+    i do it only for study reasons.
+
+    *NOTICE that i created a environment variable for heroku JWT_TOKEN in order for it to work in heroku as well.
+
+*/
+
 const env = process.env.NODE_ENV || "development";
+if(env === "test" || env === "development"){
+    let config= require('./config.json');
 
-console.log("env ******",env);
-
-if(env === "test"){
-    process.env.PORT = 3000;
-    process.env.MONGODB_URI = "mongodb://localhost:27017/TodoAppTest";
-
-} else if(env === "development") {
-    process.env.PORT = 3000;
-    process.env.MONGODB_URI = "mongodb://localhost:27017/TodoApp";
+    Object.keys(config[env]).forEach((key) => {
+        // console.log(config[env][key]);
+        process.env[key] = config[env][key];
+    });
 }
+console.log(`***${env}***`);
+

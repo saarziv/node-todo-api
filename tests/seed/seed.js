@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const { todos } = require("../../server/db/models/todo");
 const { User } = require("../../server/db/models/user");
 
+
+
 //better to generate the token with jwt sign and not the instance method generateAuthToken()
 //because this way we are not making the seed user db reliable on the functionality of generateAuthToken() method.
 const userOneId = new ObjectID();
@@ -15,7 +17,7 @@ const UsersTestArray = [
         password:"123",
         tokens:[{
             access:'auth',
-            token: jwt.sign({_id:userOneId.toHexString(),access:'auth'},'123abc').toString()
+            token: jwt.sign({_id:userOneId.toHexString(),access:'auth'},process.env.JWT_SECRET).toString()
         }]
     }),
     new User({
