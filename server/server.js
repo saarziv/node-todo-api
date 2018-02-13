@@ -62,21 +62,36 @@ app.get("/todos/:id",authenticate,(req,res) => {
 
 
 
-app.delete("/todos/:id",authenticate,(req,res) => {
-   const id = req.params.id;
-   if(!ObjectID.isValid(id)){
-       return res.status(404).send();
-   }
+app.delete("/todos/:id",authenticate,async (req,res) => {
 
-   todos.findOneAndRemove({_id: id,_creator: req.user._id}).then((todo) => {
-       if(!todo){
-           res.status(404).send(`the id :${id} does not exist`);
-       }
 
-       res.send({todo});
-   }).catch((e) => {
-       res.status(400).send();
-   })
+    try {
+            const id = req.params.id;
+            if(!ObjectID.isValid(id)){
+                return res.status(404).send();
+            }
+            let todo = await todos.findOneAndRemove({_id: id,_creator: req.user._id});
+            if(!todo){
+                res.status(404).send(`the id :${id} does not exist`);
+            }
+            res.send({todo});
+    }
+    catch (e) {
+        res.status(400).send();
+    }
+
+
+   //promise way
+
+   // todos.findOneAndRemove({_id: id,_creator: req.user._id}).then((todo) => {
+   //     if(!todo){
+   //         res.status(404).send(`the id :${id} does not exist`);
+   //     }
+   //
+   //     res.send({todo});
+   // }).catch((e) => {
+   //     res.status(400).send();
+   // })
 });
 
 app.patch("/todos/:id",authenticate,(req,res) => {
@@ -112,19 +127,35 @@ app.patch("/todos/:id",authenticate,(req,res) => {
 
 });
 
-app.post("/users",(req,res)=>{
-    let properties =  _.pick(req.body,["email","password"]);
-    let user = new User(properties);
+app.post("/users", async(req,res)=>{
+
 
     //generateAuthToken - an instance method we created on the user model that generates a token updates ->
     // the user instance with the token and returns that token
-    user.save().then(()=>{
-        return user.generateAuthToken();
 
-    }).then((token) => {
+    try {
+        let properties =  _.pick(req.body,["email","password"]);
+        let user = new User(properties);
+        await user.save();
+        const token = await user.generateAuthToken();
         res.header("x-auth",token).send(user.toJSON());
+    } catch (e) {
+        res.status(400).send(e);
+    }
 
-    }).catch((e)=>res.status(400).send(e))
+    //with promises.
+
+    // user.save().then(()=>{
+    //     return user.generateAuthToken();
+    //
+    // }).then((token) => {
+    //     res.header("x-auth",token).send(user.toJSON());
+    //
+    // }).catch((e)=>res.status(400).send(e))
+
+    //saving user.
+
+
 
     //different way to save users :(nice explanation)
     /*
@@ -154,32 +185,51 @@ app.post("/users",(req,res)=>{
 //we are setting the req parameter with the user object and the token so the next function will have these properties as well. which is awesome.
 //we must call next() in order to make the next function execute.
 
-app.post("/users/login",(req,res)=>{
+app.post("/users/login",async (req,res)=>{
     let body = _.pick(req.body,["email","password"]);
-    let user;
-    User.getByCredentials(body.email,body.password)
-        .then((userFound) =>{
-            user = userFound;
+    try {
+        let user  = await User.getByCredentials(body.email,body.password);
+        let generatedToken = await user.generateAuthToken();
+        res.header('x-auth',generatedToken).send(user);
+    } catch (e) {
+        res.status(401).send(e)
+    }
 
-            //notice that when logging in we need to generate a new auth token
-            //because an authentication token represents a login to the server ,
-            // we wouldn`t want to validate an old token that was generated in an older login in
-            //the goal is to pass the token to ever endpoint we expose in order to see if the user is authorized.
-            //we created a middleware function that is called authenticate in order to achieve that.
-            return userFound.generateAuthToken()
-        }).then((token) =>{
+    //promise way
 
-            // it will send only id and email thanks to the User.toJson function that we overrided.
-            res.header('x-auth',token).send(user);
-        })
-        .catch((e) => res.status(401).send(e));
+    // let user;
+    // User.getByCredentials(body.email,body.password)
+    //     .then((userFound) =>{
+    //         user = userFound;
+    //
+    //         //notice that when logging in we need to generate a new auth token
+    //         //because an authentication token represents a login to the server ,
+    //         // we wouldn`t want to validate an old token that was generated in an older login in
+    //         //the goal is to pass the token to ever endpoint we expose in order to see if the user is authorized.
+    //         //we created a middleware function that is called authenticate in order to achieve that.
+    //         return userFound.generateAuthToken()
+    //     }).then((token) =>{
+    //
+    //         // it will send only id and email thanks to the User.toJson function that we overrided.
+    //         res.header('x-auth',token).send(user);
+    //     })
+    //     .catch((e) => res.status(401).send(e));
 
 });
 
-app.delete("/users/me/token",authenticate,(req,res)=>{
-    req.user.removeToken(req.token).then(() =>{
+app.delete("/users/me/token",authenticate,async (req,res)=>{
+    try {
+        await req.user.removeToken(req.token);
         res.status(200).send("successfully logged out.");
-    }).catch((e)=> res.status(400).send(e))
+    } catch (e) {
+        res.status(400).send(e);
+    }
+
+    //promise way :
+
+    // req.user.removeToken(req.token).then(() =>{
+    //     res.status(200).send("successfully logged out.");
+    // }).catch((e)=> res.status(400).send(e))
 });
 
 

@@ -102,7 +102,7 @@ UserSchema.methods.generateAuthToken = function () {
 
 };
 
-UserSchema.statics.getByToken = function (token){
+UserSchema.statics.getByToken = async function  (token){
     let decoded;
     //if the verify results in an error we will need to handle it.
     try {
@@ -117,13 +117,20 @@ UserSchema.statics.getByToken = function (token){
     }
 
     //we need to check all props are equal the decoded objects props (and not only id)for security reasons probably..
-    return User.findOne({
+    // return User.findOne({
+    //     '_id':decoded._id,
+    //     'tokens.access':decoded.access,
+    //     'tokens.token':token
+    // }).then((user)=>{
+    //     return user;
+    // }).catch((e)=>e)
+
+    const user = await User.findOne({
         '_id':decoded._id,
         'tokens.access':decoded.access,
         'tokens.token':token
-    }).then((user)=>{
-        return user;
-    }).catch((e)=>e)
+    });
+    return user;
 };
 
 UserSchema.statics.getByCredentials = function (email,password) {
